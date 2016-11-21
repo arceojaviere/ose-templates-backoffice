@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ImageStream
+metadata:
+  annotations:
+    openshift.io/image.dockerRepositoryCheck: 2016-09-24T14:49:01Z
+  creationTimestamp: null
+  generation: 2
+  name: sonatype-nexus
+spec:
+  tags:
+    -  name: '2.14.0-01'
+       annotations:
+         description: 'Sonatype Nexus repository.'
+         iconClass: icon-git
+         sampleRef: 2.14.x
+         supports: 'maven:1,maven:2,maven:3'
+         tags: 'maven,nexus,repository'
+         version: '2.14.0-01'
+       from:
+         kind: DockerImage
+         name: 'docker.io/sonatype/nexus:2.14.0-01'
+       generation: 2
+       importPolicy: {  }
+    -  name: latest
+       annotations:
+       description: Provides a Sonatype Nexus Maven repository
+       iconClass: icon-git
+       tags: sonatype-nexus
+       version: latest
+       from:
+         kind: DockerImage
+         name: 'docker.io/sonatype/nexus:latest'
+       generation: 2
+       importPolicy: {}
+      

@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: gogs-centos7-template
+metadata:
+  annotations:
+    description: 'GOGS GIT repository. Uses an internal SQLite3 database. It requests no volume claims, so volumes must be added manually. \
+        WARNING: If no volumes are added, all changes will be lost when the container exits. Scaling to more than one replica is not supported.'
+    iconClass: icon-nexus
+    tags: git,gogs
+  creationTimestamp: null
+  name: gogs-centos7
+objects:
+
+# Service
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${NEXUS_SERVICE_NAME}
+  spec:
+    ports:
+    - name: http
+      port: 8081
+    selector:
+      name: ${NEXUS_SERVICE_NAME}
+
+# Route
+- apiVersion: v1
+  id: ${NEXUS_SERVICE_NAME}-http
+  kind: Route
+  metadata:
+    annotations:
+      description: Route for the repository's http service.
+    labels:
+    name: ${GOGS_SERVICE_NAME}
+  spec:
+    host: ${HOSTNAME_HTTP}
+    to:
+      name: ${GOGS_SERVICE_NAME}
+
+# Deployment Config
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: ${GOGS_SERVICE_NAME}
+  spec:
+    replicas: 1
+    selector:
+      name: ${GOGS_SERVICE_NAME}
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          name: ${GOGS_SERVICE_NAME}
+      spec:
+        containers:
+        - name: ${GOGS_SERVICE_NAME}
+          env:
+          - name: ROOT_URL
+            value: ${GOGS_PROTOCOL}//${HTTP_HOST}
+          image: 'docker.io/arceojaviere/gogs-centos7'
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
+          ports:
+          - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 60
+          resources:
+            limits:
+              memory: ${MEMORY_LIMIT}
+          volumeMounts:
+          - mountPath: /opt/gogs/data
+            name: ${GOGS_SERVICE_NAME}-data
+        volumes:
+        - emptyDir:
+            medium: ""
+          name: ${GOGS_SERVICE_NAME}-data
+
+parameters:
+- description: Protocol used for GOGS root URL
+  displayName: Root URL protocol
+  name: GOGS_PROTOCOL
+  required: true
+  value: http
+- description: Maximum amount of memory the container can use.
+  displayName: Memory Limit
+  name: MEMORY_LIMIT
+  required: true
+  value: 1Gi
+- description: The OpenShift Namespace where the ImageStream resides.
+  displayName: Namespace
+  name: NAMESPACE
+  value: openshift
+- description: The name of the OpenShift Service exposed for the repository.
+  displayName: Repository Service Name
+  name: GOGS_SERVICE_NAME
+  required: true
+  value: gogs-centos7
+- description: 'Custom hostname for http service route.  Leave blank for default hostname,
+    e.g.: <application-name>-<project>.<default-domain-suffix>'
+  displayName: Repository Hostname
+  name: HOSTNAME_HTTP
+

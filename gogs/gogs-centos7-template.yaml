@@ -6,7 +6,7 @@ metadata:
   annotations:
     description: 'GOGS GIT repository. Uses an internal SQLite3 database. It requests no volume claims, so volumes must be added manually. \
         WARNING: If no volumes are added, all changes will be lost when the container exits. Scaling to more than one replica is not supported.'
-    iconClass: icon-nexus
+    iconClass: icon-git
     tags: git,gogs
   creationTimestamp: null
   name: gogs-centos7
@@ -16,17 +16,17 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
-    name: ${NEXUS_SERVICE_NAME}
+    name: ${GOGS_SERVICE_NAME}
   spec:
     ports:
     - name: http
-      port: 8081
+      port: 8080
     selector:
-      name: ${NEXUS_SERVICE_NAME}
+      name: ${GOGS_SERVICE_NAME}
 
 # Route
 - apiVersion: v1
-  id: ${NEXUS_SERVICE_NAME}-http
+  id: ${GOGS_SERVICE_NAME}-http
   kind: Route
   metadata:
     annotations:
@@ -58,7 +58,7 @@ objects:
         - name: ${GOGS_SERVICE_NAME}
           env:
           - name: ROOT_URL
-            value: ${GOGS_PROTOCOL}//${HTTP_HOST}
+            value: ${GOGS_URL}
           image: 'docker.io/arceojaviere/gogs-centos7'
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -87,11 +87,10 @@ objects:
           name: ${GOGS_SERVICE_NAME}-data
 
 parameters:
-- description: Protocol used for GOGS root URL
-  displayName: Root URL protocol
-  name: GOGS_PROTOCOL
-  required: true
-  value: http
+- description: GOGS root URL. Leave it blank or use the URL Open Shift will assign to the service
+  displayName: Root URL
+  name: GOGS_ROOT_URL
+  required: false
 - description: Maximum amount of memory the container can use.
   displayName: Memory Limit
   name: MEMORY_LIMIT

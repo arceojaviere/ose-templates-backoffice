@@ -58,7 +58,7 @@ objects:
         - name: ${GOGS_SERVICE_NAME}
           env:
           - name: ROOT_URL
-            value: ${GOGS_URL}
+            value: ${GOGS_ROOT_URL}
           image: 'docker.io/arceojaviere/gogs-centos7'
           imagePullPolicy: IfNotPresent
           livenessProbe:
